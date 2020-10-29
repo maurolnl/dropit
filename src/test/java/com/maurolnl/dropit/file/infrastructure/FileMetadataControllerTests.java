@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -38,6 +37,7 @@ class FileMetadataControllerTests {
 
     private final String getAllFilesMetadataUrl = "/api/v1/getAllFilesMetadata";
     private final String deleteFilesMetadataUrl = "/api/v1/delete/{filename}";
+    private final String updateFilesMetadataUrl = "/api/v1/update/{filename}";
 
     @Test
     void whenMetadataFilesExists_retrieved200Ok() throws Exception {
@@ -121,5 +121,56 @@ class FileMetadataControllerTests {
         ArgumentCaptor<String> filenameCaptor = ArgumentCaptor.forClass(String.class);
         verify(fileService, times(1)).deleteFile(filenameCaptor.capture());
         assertThat(filenameCaptor.getValue()).isEqualTo("filename");
+    }
+
+    @Test
+    void whenValidInput_UpdateSuccessfully() throws Exception {
+        String filename = "filename";
+        String newname = "newname";
+
+        Mockito.when(fileService.updateFile(filename, newname)).thenReturn(true);
+
+        mockMvc
+                .perform(post(this.updateFilesMetadataUrl, filename)
+                .content(newname))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("File Updated")));
+
+        ArgumentCaptor<String> filenameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> newnameCaptor = ArgumentCaptor.forClass(String.class);
+        verify(fileService, times(1)).updateFile(filenameCaptor.capture(),newnameCaptor.capture());
+        assertThat(filenameCaptor.getValue()).isEqualTo("filename");
+        assertThat(newnameCaptor.getValue()).isEqualTo("newname");
+    }
+
+    @Test
+    void whenInValidInput_CouldNotFoundFile() throws Exception {
+        String filename = "filename";
+
+        Mockito.when(fileService.updateFile(filename, "")).thenReturn(false);
+
+        mockMvc
+                .perform(post(this.updateFilesMetadataUrl, filename)
+                .content("newname"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Could not found the file")));
+
+        ArgumentCaptor<String> filenameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> newnameCaptor = ArgumentCaptor.forClass(String.class);
+        verify(fileService, times(1)).updateFile(filenameCaptor.capture(),newnameCaptor.capture());
+        assertThat(filenameCaptor.getValue()).isEqualTo("filename");
+        assertThat(newnameCaptor.getValue()).isEqualTo("newname");
+    }
+
+    @Test
+    void whenInValidInputBody_BadRequest() throws Exception {
+        String filename = "filename";
+
+        Mockito.when(fileService.updateFile(filename, null)).thenReturn(false);
+
+        mockMvc
+                .perform(post(this.updateFilesMetadataUrl, filename))
+                .andExpect(status().isBadRequest());
+
     }
 }
