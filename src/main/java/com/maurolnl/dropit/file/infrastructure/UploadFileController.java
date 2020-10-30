@@ -25,9 +25,9 @@ public class UploadFileController {
     ) {
         if(file == null) throw new RuntimeException("You must select a file for uploading");
         try{
-            fileService.store(file);
-
-            return new ResponseEntity<>(file.getOriginalFilename(), HttpStatus.OK);
+            boolean serviceResult = fileService.store(file);
+            if(!serviceResult) return new ResponseEntity<>("An Error Occurred", HttpStatus.CONFLICT);
+            return new ResponseEntity<>(file.getOriginalFilename(), HttpStatus.CREATED);
         }catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

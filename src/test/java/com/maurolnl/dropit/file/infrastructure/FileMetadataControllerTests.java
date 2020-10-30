@@ -138,7 +138,8 @@ class FileMetadataControllerTests {
 
         ArgumentCaptor<String> filenameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> newnameCaptor = ArgumentCaptor.forClass(String.class);
-        verify(fileService, times(1)).updateFile(filenameCaptor.capture(),newnameCaptor.capture());
+        verify(fileService, times(1))
+                .updateFile(filenameCaptor.capture(),newnameCaptor.capture());
         assertThat(filenameCaptor.getValue()).isEqualTo("filename");
         assertThat(newnameCaptor.getValue()).isEqualTo("newname");
     }
